@@ -83,40 +83,34 @@ The Go Core and Adapters must follow this mapping strictly:
 
 ---
 
-## 🏗️ Epic 4: The Citadel (Deployment & Infrastructure)
-**Goal**: Seamless rollout to 500+ future services using Base Images.
+## 🏗️ Epic 4: The Bifrost Local (Local Orchestration & DX)
+**Goal**: Seamless developer workflow and manual verification on local machines.
 
-### 🐳 4.1 Base Image Architecture
-- **Repo**: `zfw-infra/base-images`.
-- **Docker-Python**:
-  - `FROM python:3.11-slim`
-  - `COPY --from=heimdall-builder /libheimdall.so /usr/local/lib/`
-  - `ENV LD_LIBRARY_PATH=/usr/local/lib`
-- **Docker-Go**:
-  - Similar to Python but optimized for Go binaries.
+### 💻 4.1 Local Shared Library Linking
+- **Local Build**: Compile `libheimdall.so` into a known local directory (e.g., `./bin/`).
+- **Env Configuration**: Document how to set `LD_LIBRARY_PATH` (Linux/Mac) or `PATH` (Windows) locally so the Python/Go adapters can find the library without specific Docker setup.
 
-### 🛠️ 4.2 Automated Injections
-- Patch the `deploy-prod.yml` in all repos to point to `zfw-base-python` instead of generic `python:3.11`.
-- This ensures that `libheimdall.so` is "just there" in the environment.
+### 🛠️ 4.2 Manual Pilot Integration
+- **Manual Adapter Install**: Install the local `zfw-heimdall-python` via `pip install -e` (editable mode).
+- **Middleware Hook**: Manually add the middleware to `zorms/main.py`.
+- **The "Kill Switch" Test**: Prove that Heimdall won't take down the service if things go wrong (e.g., renaming the `.so` file while running).
 
 ---
 
 ## 🚀 Epic 5: The Nine Realms Rollout (Service Integration)
-**Goal**: Activating Heimdall in the wild.
+**Goal**: Activating Heimdall in the wild after successful local pilot.
 
 ### 🧪 5.1 Pilot: `zorms`
-1.  Add `zfw-heimdall-python` to `requirements.txt`.
-2.  In `main.py`: `app.add_middleware(HeimdallMiddleware)`.
-3.  Identify the unique GoWay/EasyEcom integrations in `zorms` and wrap them in the `with heimdall.hint(...)` context manager.
-4.  Remove the existing `try/except` in `RequestLogMiddleware` that returns `str(e)`—Heimdall now owns that.
+1.  Identify the unique GoWay/EasyEcom integrations in `zorms` and wrap them in the `with heimdall.hint(...)` context manager.
+2.  Run the service locally, trigger high-frequency errors (404s, 500s), and verify the JSON output matches the "Premium" spec in the terminal.
+3.  Remove the existing `try/except` in `RequestLogMiddleware` that returns `str(e)`—Heimdall now owns that.
 
 ### 📊 5.2 Dashboard: `zfw_dashboard`
-1.  The `zfw_dashboard` is a frontend-heavy repo. If it has a Node/Go backend component, apply the respective adapter.
-2.  If it is strictly a static React/Vue app, update the Axios/Fetch interceptor to correctly parse the new "Premium JSON" format and show the user the "Reference ID".
+1.  Update the Axios/Fetch interceptor to correctly parse the new "Premium JSON" format and show the user the "Reference ID".
 
 ### 🔗 5.3 Shared Service: `z-or-cs`
 1.  Apply the `zfw-heimdall-go` adapter.
-2.  Verify that `trace_id` headers are passed when `zorms` calls `z-or-cs`.
+2.  Verify that `trace_id` headers are passed when `zorms` calls `z-or-cs` in the local dev environment.
 
 ---
 

@@ -36,7 +36,7 @@ var masterMappings = []categoryMapping{
 	{[]string{"httpx.HTTPStatusError.*5[0-9]{2}", "requests.exceptions.HTTPError.*5[0-9]{2}", "pywa.errors.WhatsAppError"}, "UPSTREAM_FAILURE", "Integration"},
 	{[]string{"httpx.TimeoutException", "requests.exceptions.Timeout", "context.DeadlineExceeded"}, "INTEGRATION_TIMEOUT", "Upstream"},
 	{[]string{"net.OpError", "net.AddrError", "syscall.ECONNREFUSED", "syscall.ETIMEDOUT"}, "NETWORK_ERROR", "System/OS"},
-	{[]string{"json.JSONDecodeError", "yaml.YAMLError", "marshmallow.*", "weasyprint.WeasyPrintException", "pandas.errors.*", "numpy.linalg.LinAlgError"}, "DATA_MALFORMED", "Logic"},
+	{[]string{"json.JSONDecodeError", "JSONDecodeError", "yaml.YAMLError", "marshmallow.*", "weasyprint.WeasyPrintException", "pandas.errors.*", "numpy.linalg.LinAlgError"}, "DATA_MALFORMED", "Logic"},
 	{[]string{"ZeroDivisionError", "KeyError", "AttributeError", "RecursionError", "Panic"}, "LOGIC_CRASH", "System"},
 	{[]string{"FileNotFoundError", "IOError", "os.ErrClosed"}, "F_SYSTEM_ERROR", "System"},
 }

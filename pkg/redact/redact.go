@@ -1,59 +1,30 @@
 package redact
 
-import "strings"
+import (
+	"regexp"
+)
 
-var sensitiveKeys = []string{
-	"password", "secret", "api_key", "auth_token", "jwt", "database_url", "access_key",
-}
+var (
+	// uriRegex matches URI schemes with passwords: scheme://user:password@host
+	// We use greedy matching for the middle part to handle passwords that might contain '@'
+	uriRegex = regexp.MustCompile(`(?i)([a-z0-9+.-]+://[^:]+:)(.*)(@[^/]+)`)
+
+	// keyRegex matches common sensitive keys in JSON or key=value format (case-insensitive)
+	// Supports: key=value, key: value, "key": "value", 'key': 'value'
+	keyRegex = regexp.MustCompile(`(?i)("?'?(?:password|secret|api_key|auth_token|jwt|database_url|access_key|token)"?'?[\s]*[:=][\s]*["']?)([^"'\s,]+)(["']?)`)
+)
 
 // SanitizeString redacts sensitive terms from the input.
 func SanitizeString(input string) string {
-	res := input
-	for _, key := range sensitiveKeys {
-		res = replaceAssign(res, key+"=")
-		res = replaceJSON(res, `"`+key+`": "`)
+	if input == "" {
+		return ""
 	}
+
+	// 1. Redact URI passwords
+	res := uriRegex.ReplaceAllString(input, `${1}[REDACTED]${3}`)
+
+	// 2. Redact key-value pairs (case-insensitive)
+	res = keyRegex.ReplaceAllString(res, `${1}[REDACTED]${3}`)
+
 	return res
-}
-
-func replaceAssign(input, prefix string) string {
-	var sb strings.Builder
-	for {
-		idx := strings.Index(input, prefix)
-		if idx == -1 {
-			sb.WriteString(input)
-			break
-		}
-		sb.WriteString(input[:idx+len(prefix)])
-		sb.WriteString("[REDACTED]")
-
-		rest := input[idx+len(prefix):]
-		end := strings.IndexAny(rest, " \n\r\t,")
-		if end == -1 {
-			break
-		}
-		input = rest[end:]
-	}
-	return sb.String()
-}
-
-func replaceJSON(input, prefix string) string {
-	var sb strings.Builder
-	for {
-		idx := strings.Index(input, prefix)
-		if idx == -1 {
-			sb.WriteString(input)
-			break
-		}
-		sb.WriteString(input[:idx+len(prefix)])
-		sb.WriteString("[REDACTED]")
-
-		rest := input[idx+len(prefix):]
-		end := strings.IndexByte(rest, '"')
-		if end == -1 {
-			break
-		}
-		input = rest[end:]
-	}
-	return sb.String()
 }

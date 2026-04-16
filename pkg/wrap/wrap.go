@@ -8,7 +8,8 @@ import (
 
 // RawError represents the incoming error payload from adapters.
 type RawError struct {
-	ErrorMessage string `json:"error_message"`
+	TraceID      string `json:"trace_id"`
+	ErrorMessage string `json:"error"`
 	StackTrace   string `json:"stack_trace"`
 	StatusCode   int    `json:"status_code"`
 }
@@ -32,11 +33,11 @@ func ProcessError(input string) string {
 
 	// Parse inputs and sanitize
 	sanitizedMsg := redact.SanitizeString(raw.ErrorMessage)
-	sanitizedStack := redact.SanitizeString(raw.StackTrace)
 
 	return toJSON(PremiumError{
+		TraceID:     raw.TraceID,
 		Category:    cat,
-		Message:     sanitizedMsg + " | " + sanitizedStack,
+		Message:     sanitizedMsg,
 		IsSanitized: true,
 	})
 }

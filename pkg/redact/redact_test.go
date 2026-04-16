@@ -25,6 +25,21 @@ func TestSanitizeString(t *testing.T) {
 			input:    `{"error": "invalid token", "jwt": "eyJhb..."}`,
 			expected: `{"error": "invalid token", "jwt": "[REDACTED]"}`,
 		},
+		{
+			name:     "Contains postgres URI",
+			input:    "Critical Failure: Connection to postgresql://admin:P@ssword123@zorms-db:5432/dev failed",
+			expected: "Critical Failure: Connection to postgresql://admin:[REDACTED]@zorms-db:5432/dev failed",
+		},
+		{
+			name:     "Contains mixed-case api_key",
+			input:    "API_KEY=AKIA_MOCK_123456789",
+			expected: "API_KEY=[REDACTED]",
+		},
+		{
+			name:     "Contains nested JSON auth_token",
+			input:    `"Auth_Token": "secret_v1"`,
+			expected: `"Auth_Token": "[REDACTED]"`,
+		},
 	}
 
 	for _, tc := range testCases {

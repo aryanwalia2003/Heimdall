@@ -1,7 +1,15 @@
 package main
 
+/*
+#include <stdlib.h>
+*/
 import "C"
-import "github.com/aryanwalia/heimdall/pkg/wrap"
+
+import (
+	"unsafe"
+
+	"github.com/aryanwalia/heimdall/pkg/wrap"
+)
 
 //export ProcessError
 func ProcessError(input *C.char) *C.char {
@@ -10,5 +18,9 @@ func ProcessError(input *C.char) *C.char {
 	return C.CString(goOutput)
 }
 
-// Placeholder for shared library logic
+//export FreeString
+func FreeString(ptr *C.char) {
+	C.free(unsafe.Pointer(ptr))
+}
+
 func main() {}
