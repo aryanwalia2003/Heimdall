@@ -1,6 +1,7 @@
 # Binaries
 bin/
 *.so
+!adapters/python/heimdall/libheimdall.so
 *.h
 
 # Go

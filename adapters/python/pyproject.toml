@@ -12,6 +12,9 @@ dependencies = [
     "ulid-py",
 ]
 
+[tool.setuptools.package-data]
+"heimdall" = ["libheimdall.so"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["heimdall*"]

@@ -22,22 +22,48 @@ import sys
 # Load the shared library
 _lib = None
 try:
-    # Look for libheimdall.so in the bin directory relative to the project root
-    # For local development, we can also check LD_LIBRARY_PATH
-    lib_path = os.environ.get("HEIMDALL_LIB_PATH", "bin/libheimdall.so")
-    _lib = ctypes.CDLL(lib_path)
+    # 1. Try to find the library inside the package folder (Self-Bundled)
+    current_dir = os.path.dirname(__file__)
+    internal_lib_path = os.path.join(current_dir, "libheimdall.so")
+    
+    # 2. Fall back to environment variable if not found internally
+    lib_path = os.environ.get("HEIMDALL_LIB_PATH")
+    
+    if os.path.exists(internal_lib_path):
+        _lib = ctypes.CDLL(internal_lib_path)
+    elif lib_path:
+        _lib = ctypes.CDLL(lib_path)
+    else:
+        # Last resort: try default name in bin/
+        _lib = ctypes.CDLL("bin/libheimdall.so")
     _lib.ProcessError.argtypes = [ctypes.c_char_p]
     _lib.ProcessError.restype = ctypes.c_void_p
     _lib.FreeString.argtypes = [ctypes.c_void_p]
 except Exception as e:
     print(f"Heimdall warning: Could not load shared library: {e}", file=sys.stderr)
 
+import logging
+
+logger = logging.getLogger("heimdall")
+logger.setLevel(logging.ERROR)
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter('[%(name)s] %(levelname)s - %(message)s'))
+    logger.addHandler(handler)
+
 def _process_with_heimdall(exc: Exception) -> JSONResponse:
     trace = traceback.format_exc()
     category = getattr(exc, "heimdall_category", getattr(exc, "category", None))
+    trace_id = current_trace_id.get()
     
+    # Log the full technical truth on the server for correlation
+    logger.error(
+        f"TraceID={trace_id} | Exception={type(exc).__name__}: {str(exc)}\n"
+        f"--- Full Stack Trace ---\n{trace}\n------------------------"
+    )
+
     payload = {
-        "trace_id": current_trace_id.get(),
+        "trace_id": trace_id,
         "error": f"{type(exc).__name__}: {str(exc)}",
         "stack_trace": trace,
         "category": category,
