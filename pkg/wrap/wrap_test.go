@@ -41,3 +41,18 @@ func TestProcessError_ValidBasicJSON(t *testing.T) {
 		t.Errorf("Expected IsSanitized true, got false")
 	}
 }
+
+func TestProcessError_WithMappedCategory(t *testing.T) {
+	input := `{"error_message": "sqlalchemy.exc.OperationalError: connection lost", "stack_trace": "test stack", "status_code": 500}`
+	output := ProcessError(input)
+
+	var resp ErrorResponse
+	err := json.Unmarshal([]byte(output), &resp)
+	if err != nil {
+		t.Fatalf("ProcessError did not return valid JSON: %v", err)
+	}
+
+	if resp.Category != "DATABASE_ERROR" {
+		t.Errorf("Expected category DATABASE_ERROR, got %v", resp.Category)
+	}
+}

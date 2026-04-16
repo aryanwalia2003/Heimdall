@@ -16,6 +16,7 @@ def _get_or_create_trace_id(request: Request) -> str:
 
 def _process_with_heimdall(exc: Exception) -> JSONResponse:
     trace = traceback.format_exc()
+    category = getattr(exc, "heimdall_category", getattr(exc, "category", None))
     try:
         # In a real deployed setup we'd call libheimdall.so here.
         # Since we're missing it, it raises an exception which fail-opens.

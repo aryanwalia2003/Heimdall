@@ -50,14 +50,24 @@ The Go Core and Adapters must follow this mapping strictly:
 
 | Exception Pattern (Regex/Class) | Heimdall Category | Logic Level |
 | :--- | :--- | :--- |
-| `sqlalchemy.exc.*`, `psycopg2.*`, `pymongo.*` | `DATABASE_ERROR` | Persistence |
-| `fastapi.exceptions.RequestValidationError`, `pydantic.ValidationError` | `VALIDATION_ERROR` | Schema/Request |
-| `requests.exceptions.Timeout`, `httpx.ConnectTimeout` | `INTEGRATION_TIMEOUT` | Upstream |
-| `requests.exceptions.HTTPError` (Status 5xx from upstream) | `UPSTREAM_FAILURE` | Integration |
-| `jose.exceptions.*`, `ExpiredSignatureError` | `AUTH_EXPIRED` | Security |
-| `PermissionError`, `403 Forbidden` | `ACCESS_DENIED` | Security |
-| `404 Not Found` | `RESOURCE_NOT_FOUND` | URL/Path |
-| `ZeroDivisionError`, `KeyError`, `AttributeError` | `LOGIC_CRASH` | System |
+| `sqlalchemy.exc.OperationalError`, `aiomysql.OperationalError`, `psycopg2.OperationalError`, `pymongo.errors.ConnectionFailure`, `gorm.*` | `DATABASE_ERROR` | Persistence |
+| `sqlalchemy.exc.ProgrammingError`, `pymysql.err.ProgrammingError`, `django.db.utils.ProgrammingError` | `DATABASE_ERROR` | Persistence |
+| `mysql.connector.errors.InternalError` (1213), `psycopg2.errors.DeadlockDetected`, `sqlalchemy.exc.InternalError` (Lock wait) | `CONCURRENCY_ERROR` | Persistence |
+| `sqlalchemy.exc.NoResultFound`, `sql.ErrNoRows`, `django.core.exceptions.ObjectDoesNotExist`, `redis.Nil` | `RESOURCE_NOT_FOUND` | Persistence |
+| `sqlalchemy.exc.IntegrityError`, `pymysql.err.IntegrityError`, `fastapi.exceptions.RequestValidationError`, `pydantic.ValidationError` | `VALIDATION_ERROR` | Persistence/Logic |
+| `botocore.exceptions.ClientError` (NoSuchKey/404), `os.ErrNotExist`, `google.cloud.exceptions.NotFound` | `RESOURCE_NOT_FOUND` | Infrastructure |
+| `botocore.exceptions.ClientError` (AccessDenied), `PermissionError`, `403 Forbidden`, `os.ErrPermission` | `ACCESS_DENIED` | Security |
+| `botocore.exceptions.CredentialRetrievalError`, `ExpiredSignatureError`, `jwt.exceptions.InvalidTokenError`, `jose.exceptions.*` | `AUTH_EXPIRED` | Security |
+| `watchtower.CloudWatchLogBatchError`, `boto3.exceptions.*`, `google.api_core.exceptions.*` | `CLOUD_SERVICE_ERROR` | Infrastructure |
+| `redis.exceptions.ConnectionError`, `redis.exceptions.TimeoutError`, `redis.exceptions.BusyLoadingError` | `CACHE_ERROR` | Cache |
+| `rq.exceptions.DequeuingError`, `celery.exceptions.TimeoutError`, `pika.exceptions.AMQPConnectionError`, `github.com/hibiken/asynq.*` | `TASK_QUEUE_ERROR` | Infrastructure |
+| `httpx.HTTPStatusError` (429), `ratelimit.exception.*` | `RATE_LIMIT_EXCEEDED` | Traffic |
+| `httpx.HTTPStatusError` (5xx), `requests.exceptions.HTTPError` (5xx), `pywa.errors.WhatsAppError` | `UPSTREAM_FAILURE` | Integration |
+| `httpx.TimeoutException`, `requests.exceptions.Timeout`, `context.DeadlineExceeded` | `INTEGRATION_TIMEOUT` | Upstream |
+| `net.OpError`, `net.AddrError`, `syscall.ECONNREFUSED`, `syscall.ETIMEDOUT` | `NETWORK_ERROR` | System/OS |
+| `json.JSONDecodeError`, `yaml.YAMLError`, `marshmallow.*`, `weasyprint.WeasyPrintException`, `pandas.errors.*`, `numpy.linalg.LinAlgError` | `DATA_MALFORMED` | Logic |
+| `ZeroDivisionError`, `KeyError`, `AttributeError`, `RecursionError`, `Panic` | `LOGIC_CRASH` | System |
+| `FileNotFoundError`, `IOError`, `os.ErrClosed` | `F_SYSTEM_ERROR` | System |
 
 ### 🏷️ 3.2 Dynamic Categorization (How Developers Add New Ones)
 - **Method A (Inheritance)**:

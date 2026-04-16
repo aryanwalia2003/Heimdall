@@ -28,12 +28,14 @@ func ProcessError(input string) string {
 		return toJSON(PremiumError{Category: "SYSTEM_ERROR", IsSanitized: false})
 	}
 
+	cat, _ := DetermineCategory(raw.ErrorMessage)
+
 	// Parse inputs and sanitize
 	sanitizedMsg := redact.SanitizeString(raw.ErrorMessage)
 	sanitizedStack := redact.SanitizeString(raw.StackTrace)
 
 	return toJSON(PremiumError{
-		Category:    "SYSTEM_ERROR", // Default for now
+		Category:    cat,
 		Message:     sanitizedMsg + " | " + sanitizedStack,
 		IsSanitized: true,
 	})
