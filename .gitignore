@@ -1,0 +1,26 @@
+# Binaries
+bin/
+*.so
+*.h
+
+# Go
+vendor/
+go.sum
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+build/
+dist/
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
+
+# Python Virtual Environments
+venv/
+
+# Agentic Artifacts
+.agents/
